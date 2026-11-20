@@ -421,6 +421,26 @@
 @keyframes permissionIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 </style>
 
+
+<!-- ===== Anti-copy protection ===== -->
+<style id="no-copy-style">
+html, body, body * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+/* Typing must still work in input fields */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+img, svg, a { -webkit-user-drag: none !important; user-drag: none !important; }
+::selection { background: transparent; }
+input::selection, textarea::selection { background: rgba(255,107,0,.25); }
+@media print { html, body { display: none !important; } }
+</style>
 </head>
 <body>
 
@@ -2238,5 +2258,54 @@
  </div>
 </div>
 
+
+<script id="no-copy-script">
+(function () {
+  'use strict';
+  var isField = function (el) {
+    return el && el.closest && el.closest('input, textarea, [contenteditable="true"]');
+  };
+  var stop = function (e) { e.preventDefault(); e.stopPropagation(); return false; };
+
+  // Copy / cut / right-click / drag / select: block everywhere
+  ['copy', 'cut', 'contextmenu', 'dragstart'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) {
+      if (ev === 'copy' || ev === 'cut') {
+        try { if (e.clipboardData) e.clipboardData.setData('text/plain', ''); } catch (_) {}
+      }
+      return stop(e);
+    }, true);
+  });
+
+  // Text selection blocked outside input fields (paste/typing still allowed)
+  document.addEventListener('selectstart', function (e) {
+    if (!isField(e.target)) return stop(e);
+  }, true);
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', function (e) {
+    var k = (e.key || '').toLowerCase();
+    var ctrl = e.ctrlKey || e.metaKey;
+    var blocked =
+      (ctrl && ['c', 'x', 'u', 's', 'p'].indexOf(k) > -1) ||      // copy, cut, view-source, save, print
+      (ctrl && k === 'a' && !isField(e.target)) ||                 // select all (outside inputs)
+      (ctrl && e.shiftKey && ['i', 'j', 'c', 'k'].indexOf(k) > -1) || // devtools
+      (ctrl && k === 'insert') ||
+      k === 'f12' || k === 'printscreen';
+    if (blocked) {
+      if (k === 'printscreen') { try { navigator.clipboard.writeText(''); } catch (_) {} }
+      return stop(e);
+    }
+  }, true);
+
+  // Clear any selection that somehow appears outside inputs
+  document.addEventListener('selectionchange', function () {
+    var a = document.activeElement;
+    if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) return;
+    var s = window.getSelection && window.getSelection();
+    if (s && s.rangeCount && String(s).length) s.removeAllRanges();
+  });
+})();
+</script>
 </body>
 </html>
