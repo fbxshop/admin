@@ -1,0 +1,2242 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Panel - VPN</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Bengali) -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #FF6B00;
+            --primary-dark: #E65C00;
+            --secondary: #1A237E;
+            --bg-gray: #F5F7FA;
+            --card-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+        }
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background-color: var(--bg-gray);
+            margin: 0;
+            padding-bottom: 80px;
+            color: #333;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Glass Header */
+        .admin-header {
+            background: rgba(26, 35, 126, 0.95);
+            
+            color: white;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .admin-header .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+        .admin-header .logo-img {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: white;
+            padding: 2px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .admin-badge {
+            background: #FF6B00;
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            
+            display: flex;
+            justify-content: space-around;
+            padding: 6px 0 10px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+            z-index: 100;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            border-top: 1px solid rgba(255,255,255,0.8);
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.5rem;
+            color: #9CA3AF;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 12%;
+            font-weight: 700;
+            padding: 4px 0;
+            border-radius: 12px;
+        }
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(255, 107, 0, 0.05);
+        }
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 3px;
+            transition: transform 0.2s;
+        }
+        .nav-item.active i {
+            transform: scale(1.1);
+        }
+        /* Views */
+        .view-section {
+            display: none;
+            padding: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+        .view-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 16px;
+            border: 1px solid #F3F4F6;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: var(--card-shadow);
+            border-left: 4px solid var(--primary);
+            margin-bottom: 12px;
+        }
+        /* Tables */
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.7rem;
+        }
+        .admin-table th {
+            background: #F9FAFB;
+            text-align: left;
+            padding: 8px;
+            font-weight: 700;
+            color: #4B5563;
+            border-bottom: 2px solid #E5E7EB;
+        }
+        .admin-table td {
+            padding: 8px;
+            border-bottom: 1px solid #F3F4F6;
+            vertical-align: middle;
+        }
+        .admin-table tr:hover {
+            background: #F9FAFB;
+        }
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #FF6B00, #E65C00);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(255,107,0,0.2);
+        }
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+        .btn-danger {
+            background-color: #EF4444;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 0.65rem;
+        }
+        .btn-success {
+            background-color: #10B981;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 0.65rem;
+        }
+        .btn-warning {
+            background-color: #F59E0B;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 0.65rem;
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        /* Inputs */
+        input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="url"], select, textarea {
+            width: 100%;
+            border: 1.5px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 10px 12px;
+            outline: none;
+            font-size: 0.85rem;
+            background: #F9FAFB;
+            font-weight: 500;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            background: white;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #4B5563;
+            margin-bottom: 4px;
+        }
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        /* Status Badges */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.55rem;
+            font-weight: 800;
+        }
+        .status-pending { background: #FEF3C7; color: #D97706; }
+        .status-completed { background: #D1FAE5; color: #059669; }
+        .status-rejected { background: #FEE2E2; color: #DC2626; }
+        .status-processing { background: #DBEAFE; color: #2563EB; }
+        .status-active { background: #D1FAE5; color: #059669; }
+        .status-inactive { background: #FEE2E2; color: #DC2626; }
+
+        /* PIN Login Screen */
+        .pin-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--secondary);
+            z-index: 300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            padding: 24px;
+        }
+        .pin-box {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 24px;
+            text-align: center;
+            width: 100%;
+            max-width: 320px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .pin-box img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            border: 3px solid var(--primary);
+            padding: 2px;
+        }
+        .pin-box h2 {
+            color: #1F2937;
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .pin-box p {
+            color: #6B7280;
+            font-size: 0.8rem;
+            margin-bottom: 20px;
+        }
+        .pin-input {
+            width: 100%;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 8px;
+            outline: none;
+            margin-bottom: 16px;
+            color: var(--secondary);
+        }
+        .pin-input:focus {
+            border-color: var(--primary);
+        }
+        .pin-error {
+            color: #EF4444;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-top: -8px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .color-preview {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-block;
+            border: 2px solid #E5E7EB;
+        }
+
+        /* ===== Premium UI Enhancements ===== */
+        .glass-card {
+            background: #ffffff;
+            
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        .gradient-border {
+            position: relative;
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #F3F4F6;
+        }
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #FF6B00, #1A237E);
+            border-radius: 18px;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 12px;
+            padding: 4px 12px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 12px;
+            border: 1px solid #F3F4F6;
+        }
+        .search-bar input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 0.85rem;
+            flex: 1;
+            outline: none;
+        }
+        .search-bar i {
+            color: #9CA3AF;
+            font-size: 1rem;
+        }
+    
+/* Toast notification (replaces success popup) */
+#app-toast-wrap{position:fixed;top:12px;left:0;right:0;z-index:100000;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 12px}
+.app-toast{pointer-events:auto;max-width:420px;width:100%;background:#111827;color:#fff;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.25);transform:translateY(-16px);opacity:0;transition:transform .2s ease,opacity .2s ease}
+.app-toast.in{transform:translateY(0);opacity:1}
+.app-toast i{font-size:16px;color:#22c55e}
+.app-toast.err i{color:#ef4444}
+.app-toast span{flex:1;line-height:1.4;word-break:break-word}
+</style>
+
+<style>
+.permission-overlay{position:fixed;inset:0;background:rgba(10,15,30,.62);display:none;align-items:center;justify-content:center;padding:20px;z-index:99999;}
+.permission-overlay.show{display:flex}.permission-box{width:min(100%,360px);background:#fff;border-radius:20px;padding:24px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:permissionIn .18s ease-out}
+.permission-icon{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#fff3e8;color:#f07816;font-size:22px}
+.permission-title{font-size:19px;font-weight:800;color:#182033}.permission-message{font-size:13px;color:#687386;margin:8px 0 20px;line-height:1.6}.permission-actions{display:flex;gap:10px}.permission-actions button{flex:1;padding:11px;border-radius:10px;font-weight:700;font-size:13px}.permission-cancel{background:#eef1f5;color:#475569}.permission-confirm{background:#f07816;color:white}
+@keyframes permissionIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+</style>
+
+</head>
+<body>
+
+    <!-- ================= PIN LOGIN SCREEN ================= -->
+    <div id="pin-screen" class="pin-screen">
+        <div class="pin-box">
+            <img src="https://i.postimg.cc/4308Kqh7/file-0000000085f881f582c588c132aa44a0.png" alt="Logo">
+            <h2>Admin Access</h2>
+            <p>Enter your secret PIN to continue</p>
+            
+            <input type="password" id="admin-pin-input" class="pin-input" placeholder="****" maxlength="10" autocomplete="off">
+            <p id="pin-error-msg" class="pin-error">❌ Wrong PIN! Please try again.</p>
+            
+            <button class="btn-primary w-full" onclick="verifyAdminPin()">Unlock Panel</button>
+        </div>
+        <p class="text-xs text-white/50 mt-6">Only authorized personnel can access this panel.</p>
+    </div>
+
+    <!-- ================= MAIN ADMIN PANEL ================= -->
+    <div id="admin-main-panel" style="display: none;">
+        
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="logo-area">
+                <img src="https://i.postimg.cc/4308Kqh7/file-0000000085f881f582c588c132aa44a0.png" class="logo-img" alt="Logo">
+                <span>Admin Panel</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="admin-badge"><i class="fas fa-shield-alt"></i> ADMIN</span>
+                <button onclick="logoutAdmin()" class="text-white/80 hover:text-white"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </header>
+
+        <!-- ================= MAIN VIEWS ================= -->
+
+        <!-- 1. DASHBOARD -->
+        <section id="view-dashboard" class="view-section active">
+            <h2 class="font-bold text-lg mb-4">Dashboard</h2>
+            
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="stat-card border-blue-500">
+                    <p class="text-xs text-gray-500 font-bold">Total Users</p>
+                    <h3 class="text-2xl font-bold text-blue-600" id="stat-users">0</h3>
+                </div>
+                <div class="stat-card border-green-500">
+                    <p class="text-xs text-gray-500 font-bold">Total Orders</p>
+                    <h3 class="text-2xl font-bold text-green-600" id="stat-orders">0</h3>
+                </div>
+                <div class="stat-card border-yellow-500">
+                    <p class="text-xs text-gray-500 font-bold">Pending Orders</p>
+                    <h3 class="text-2xl font-bold text-yellow-600" id="stat-pending">0</h3>
+                </div>
+                <div class="stat-card border-red-500">
+                    <p class="text-xs text-gray-500 font-bold">Pending Deposits</p>
+                    <h3 class="text-2xl font-bold text-red-600" id="stat-deposits">0</h3>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="font-bold text-sm mb-3">Recent Orders</h3>
+                <div id="recent-orders-list">
+                    <p class="text-xs text-gray-400 text-center py-4">Loading...</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="font-bold text-sm mb-3">Recent Deposits</h3>
+                <div id="recent-deposits-list">
+                    <p class="text-xs text-gray-400 text-center py-4">Loading...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. PRODUCT MANAGEMENT -->
+        <section id="view-products" class="view-section">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-bold text-lg">Manage Products</h2>
+                <button class="btn-primary" onclick="openAddProductModal()"><i class="fas fa-plus"></i> Add New</button>
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="product-search" placeholder="Search products..." oninput="filterProducts()">
+            </div>
+            <div class="card">
+                <div class="overflow-x-auto">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Packages</th>
+                                <th>Stock</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table-body">
+                            <tr><td colspan="7" class="text-center py-4 text-gray-400">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. ORDER MANAGEMENT -->
+        <section id="view-orders" class="view-section">
+            <h2 class="font-bold text-lg mb-4">Manage Orders</h2>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="order-search" placeholder="Search by order ID or user..." oninput="filterOrders()">
+            </div>
+            <div class="card">
+                <div class="overflow-x-auto">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>User</th>
+                                <th>Game</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body">
+                            <tr><td colspan="7" class="text-center py-4 text-gray-400">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. DEPOSIT MANAGEMENT -->
+        <section id="view-deposits" class="view-section">
+            <h2 class="font-bold text-lg mb-4">Manage Deposits</h2>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="deposit-search" placeholder="Search by user or txid..." oninput="filterDeposits()">
+            </div>
+            <div class="card">
+                <div class="overflow-x-auto">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>TxID</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deposits-table-body">
+                            <tr><td colspan="7" class="text-center py-4 text-gray-400">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. USER MANAGEMENT -->
+        <section id="view-users" class="view-section">
+            <h2 class="font-bold text-lg mb-4">Manage Users</h2>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="user-search" placeholder="Search by name or email..." oninput="filterUsers()">
+            </div>
+            <div class="card">
+                <div class="overflow-x-auto">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Wallet</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <tr><td colspan="5" class="text-center py-4 text-gray-400">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. CATEGORIES: product list + package manager -->
+        <section id="view-categories" class="view-section">
+            <!-- Product list -->
+            <div id="cat-list-page">
+                <h2 class="font-bold text-lg mb-1">Categories</h2>
+                <p class="text-xs text-gray-500 mb-3">প্রোডাক্ট ওপেন করে প্যাকেজ (নাম ও দাম) যোগ করুন।</p>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="cat-product-search" placeholder="Search products..." oninput="filterCatProducts()">
+                </div>
+                <div class="grid grid-cols-3 gap-3" id="cat-products-grid">
+                    <p class="text-xs text-gray-400 text-center py-4 col-span-3">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Package manager page (opens on product click) -->
+            <div id="cat-package-page" style="display:none;">
+                <div class="flex items-center mb-4">
+                    <button onclick="closePackagePage()" class="mr-3 text-gray-600 bg-white w-8 h-8 rounded-full flex items-center justify-center shadow-sm"><i class="fas fa-arrow-left"></i></button>
+                    <h2 class="font-bold text-lg" id="pkg-page-title">Product</h2>
+                </div>
+                <div class="card">
+                    <h3 class="font-bold text-sm mb-3 border-b pb-2">Add Package</h3>
+                    <div class="form-group">
+                        <label>Package Name</label>
+                        <input type="text" id="pkg-name" placeholder="e.g. 25 Diamond">
+                    </div>
+                    <div class="form-group">
+                        <label>Price (৳)</label>
+                        <input type="number" id="pkg-price" placeholder="e.g. 20" min="0" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label>Delete After (Time) <span class="text-gray-400 font-normal">- খালি রাখলে ডিলিট হবে না</span></label>
+                        <div class="flex gap-2">
+                            <input type="number" id="pkg-time" placeholder="e.g. 24" min="1" step="1">
+                            <select id="pkg-time-unit" style="width:45%;">
+                                <option value="minutes">Minutes</option>
+                                <option value="hours" selected>Hours</option>
+                                <option value="days">Days</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn-primary w-full" onclick="addPackage()"><i class="fas fa-plus"></i> Add Package</button>
+                </div>
+                <div class="card">
+                    <h3 class="font-bold text-sm mb-3 border-b pb-2">Rules &amp; Conditions</h3>
+                    <div class="form-group">
+                        <label>প্রতি লাইনে একটা নিয়ম লিখুন — ইউজার পেজে ঠিক এভাবেই দেখাবে</label>
+                        <textarea id="pkg-rules" rows="6" placeholder="Only Bangladesh servers will be topped up with ID Code&#10;The authorities are not responsible if the Player ID is incorrect"></textarea>
+                    </div>
+                    <button class="btn-primary w-full" onclick="saveRules()">Save Rules</button>
+                </div>
+                <div class="card">
+                    <h3 class="font-bold text-sm mb-3 border-b pb-2">Packages</h3>
+                    <div id="pkg-list">
+                        <p class="text-xs text-gray-400 text-center py-4">No packages yet.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. SETTINGS & PAYMENT -->
+        <section id="view-settings" class="view-section">
+            <h2 class="font-bold text-lg mb-4">Settings</h2>
+            
+            <!-- App Settings -->
+            <div class="card">
+                <h3 class="font-bold text-sm mb-3 border-b pb-2">App Configuration</h3>
+                <div class="form-group">
+                    <label>App Name</label>
+                    <input type="text" id="setting-app-name" placeholder="VPN">
+                </div>
+                <div class="form-group">
+                    <label>App Logo URL (Small Icon)</label>
+                    <input type="text" id="setting-app-logo" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Brand BG Logo URL (VPN Text)</label>
+                    <input type="text" id="setting-brand-image" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Help Line Number</label>
+                    <input type="text" id="setting-helpline" placeholder="01633985406">
+                </div>
+                <div class="form-group">
+                    <label>Notice Text</label>
+                    <input type="text" id="setting-notice" placeholder="Notice...">
+                </div>
+                <div class="form-group">
+                    <label>Help Icon Link (হেল্প আইকনে ক্লিক করলে যে লিংকে যাবে — খালি রাখলে আইকন লুকাবে)</label>
+                    <input type="text" id="setting-help-link" placeholder="https://t.me/...">
+                </div>
+                <div class="form-group">
+                    <label>Payment Page Banner URL (পেমেন্ট পেজের ব্যানার ছবি)</label>
+                    <input type="text" id="setting-payment-banner" placeholder="https://...">
+                </div>
+                <button class="btn-primary w-full" onclick="saveAppSettings()">Save Settings</button>
+            </div>
+
+            <!-- Slider Management -->
+            <div class="card">
+                <h3 class="font-bold text-sm mb-3 border-b pb-2">Slider Management</h3>
+                <div id="slider-list">
+                    <p class="text-xs text-gray-400 text-center py-4">Loading...</p>
+                </div>
+                <button class="btn-outline w-full mt-3" onclick="openAddSliderModal()"><i class="fas fa-plus"></i> Add Slider</button>
+            </div>
+
+            <!-- Home Settings -->
+            <div class="card">
+                <h3 class="font-bold text-sm mb-3 border-b pb-2">Home Section Titles</h3>
+                <div class="form-group">
+                    <label>Flash Sale Title</label>
+                    <input type="text" id="setting-flash-title" placeholder="FLASH SALE">
+                </div>
+                <div class="form-group">
+                    <label>Hot Product Title</label>
+                    <input type="text" id="setting-hot-title" placeholder="HOT PRODUCT">
+                </div>
+                <div class="form-group">
+                    <label>Others Games Title</label>
+                    <input type="text" id="setting-others-title" placeholder="Others Games">
+                </div>
+                <button class="btn-primary w-full" onclick="saveHomeSettings()">Save Home Settings</button>
+            </div>
+
+            <!-- Popup Settings -->
+            <div class="card">
+                <h3 class="font-bold text-sm mb-3 border-b pb-2">Popup Notice</h3>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="popup-active">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="text" id="popup-image" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="popup-title" placeholder="Special Offer!">
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <input type="text" id="popup-message" placeholder="Get 10% bonus...">
+                </div>
+                <button class="btn-primary w-full" onclick="savePopupSettings()">Save Popup</button>
+            </div>
+
+            <!-- Payment Settings -->
+            <div class="card">
+                <h3 class="font-bold text-sm mb-3 border-b pb-2">Payment Methods</h3>
+                <div id="payment-settings-list">
+                    <p class="text-xs text-gray-400 text-center py-4">Loading...</p>
+                </div>
+                <button class="btn-outline w-full mt-3" onclick="openAddPaymentModal()"><i class="fas fa-plus"></i> Add Payment Method</button>
+            </div>
+
+            <!-- Social Links -->
+            <div class="card">
+                <h3 class="font-bold text-sm mb-3 border-b pb-2">Social Links (shows on user home)</h3>
+                <div id="social-links-list"></div>
+                <button class="btn-outline w-full mt-3" onclick="addSocialRow()"><i class="fas fa-plus"></i> Add Link</button>
+                <button class="btn-primary w-full mt-3" onclick="saveSocialLinks()">Save Social Links</button>
+            </div>
+
+            <!-- Voucher Management -->
+            <div class="card">
+                <h3 class="font-bold text-sm mb-3 border-b pb-2">Voucher Inventory</h3>
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input type="text" id="voucher-product-name" placeholder="e.g. Free Fire 100 Diamonds">
+                </div>
+                <div class="form-group">
+                    <label>Code</label>
+                    <input type="text" id="voucher-code" placeholder="Enter voucher code">
+                </div>
+                <button class="btn-primary w-full" onclick="addVoucher()">Add Voucher</button>
+            </div>
+        </section>
+
+        <!-- ================= MODALS ================= -->
+
+        <!-- Add/Edit Product Modal -->
+        <div id="product-modal" class="modal">
+            <div class="modal-content">
+                <h3 class="font-bold text-lg mb-4" id="modal-title">Add Product</h3>
+                <input type="hidden" id="edit-product-id">
+                <div class="form-group">
+                    <label>Game Name</label>
+                    <input type="text" id="prod-name" placeholder="e.g. Free Fire">
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="prod-type">
+                        <option value="flash_sale">Flash Sale</option>
+                        <option value="hot_product">Hot Product</option>
+                        <option value="others">Others Games</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Stock</label>
+                    <select id="prod-stock">
+                        <option value="in_stock">In Stock</option>
+                        <option value="stock_out">Stock Out</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="text" id="prod-image" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="prod-status">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button class="btn-primary flex-1" onclick="saveProduct()">Save</button>
+                    <button class="btn-outline flex-1" onclick="closeModal('product-modal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Slider Modal -->
+        <div id="slider-modal" class="modal">
+            <div class="modal-content">
+                <h3 class="font-bold text-lg mb-4">Add Slider</h3>
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="text" id="slider-image" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Link (Direct Link)</label>
+                    <input type="text" id="slider-link" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="slider-active">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button class="btn-primary flex-1" onclick="saveSlider()">Save</button>
+                    <button class="btn-outline flex-1" onclick="closeModal('slider-modal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Payment Method Modal -->
+        <div id="payment-modal" class="modal">
+            <div class="modal-content">
+                <h3 class="font-bold text-lg mb-4">Add Payment Method</h3>
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <select id="pay-brand" onchange="document.getElementById('pay-name-wrap').style.display = this.value === 'other' ? 'block' : 'none'">
+                        <option value="bKash">bKash (গোলাপি)</option>
+                        <option value="Nagad">Nagad (লাল)</option>
+                        <option value="Rocket">Rocket (বেগুনি)</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group" id="pay-name-wrap" style="display:none">
+                    <label>Method Name</label>
+                    <input type="text" id="pay-name" placeholder="Upay">
+                </div>
+                <div class="form-group">
+                    <label>Payment Number</label>
+                    <input type="text" id="pay-number" placeholder="01XXXXXXXXX">
+                </div>
+                <div class="form-group">
+                    <label>Action (optional — bKash: পেমেন্ট, Nagad/Rocket: Send Money)</label>
+                    <input type="text" id="pay-instructions" placeholder="Send Money">
+                </div>
+                <p class="text-xs text-gray-500">লোগো/ইমেজ লিংক লাগবে না। রঙ, USSD কোড আর ধাপগুলো user-কে নিজে থেকে দেখাবে।</p>
+                <div class="flex gap-2 mt-4">
+                    <button class="btn-primary flex-1" onclick="savePaymentMethod()">Save</button>
+                    <button class="btn-outline flex-1" onclick="closeModal('payment-modal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= BOTTOM NAVIGATION ================= -->
+        <nav class="bottom-nav" id="bottom-nav">
+            <div class="nav-item active" onclick="showView('dashboard')" data-view="dashboard">
+                <i class="fas fa-chart-pie"></i><span>Dashboard</span>
+            </div>
+            <div class="nav-item" onclick="showView('products')" data-view="products">
+                <i class="fas fa-box"></i><span>Products</span>
+            </div>
+            <div class="nav-item" onclick="showView('orders')" data-view="orders">
+                <i class="fas fa-shopping-cart"></i><span>Orders</span>
+            </div>
+            <div class="nav-item" onclick="showView('deposits')" data-view="deposits">
+                <i class="fas fa-wallet"></i><span>Deposits</span>
+            </div>
+            <div class="nav-item" onclick="showView('users')" data-view="users">
+                <i class="fas fa-users"></i><span>Users</span>
+            </div>
+            <div class="nav-item" onclick="showView('categories')" data-view="categories">
+                <i class="fas fa-tags"></i><span>Categories</span>
+            </div>
+            <div class="nav-item" onclick="showView('settings')" data-view="settings">
+                <i class="fas fa-cog"></i><span>Settings</span>
+            </div>
+        </nav>
+    </div> <!-- End of admin-main-panel -->
+
+    <!-- ================= FIREBASE & APP LOGIC ================= -->
+    <script type="module">
+        // Reusable confirmation popup for Update / Delete / Buy actions
+        function showPermissionPopup(title, message, confirmText = 'Confirm') {
+            return new Promise(resolve => {
+                const popup = document.getElementById('permission-popup');
+                const finish = (answer) => { popup.classList.remove('show'); document.removeEventListener('keydown', onKey); resolve(answer); };
+                const onKey = e => { if (e.key === 'Escape') finish(false); };
+                document.getElementById('permission-title').textContent = title;
+                document.getElementById('permission-message').textContent = message;
+                document.getElementById('permission-confirm').textContent = confirmText;
+                popup.classList.add('show');
+                document.getElementById('permission-cancel').onclick = () => finish(false);
+                document.getElementById('permission-confirm').onclick = () => finish(true);
+                popup.onclick = e => { if (e.target === popup) finish(false); };
+                document.addEventListener('keydown', onKey);
+            });
+        }
+
+        // Custom HTML notice popup: replaces browser-native alert()
+        function showNoticePopup(message, title = 'Notice') {
+            let wrap = document.getElementById('app-toast-wrap');
+            if (!wrap) { wrap = document.createElement('div'); wrap.id = 'app-toast-wrap'; document.body.appendChild(wrap); }
+            const msg = String(message ?? '');
+            const isErr = /fail|error|invalid|insufficient|please|no spins|out of stock|not enabled|এরর|কমপক্ষে|প্রথমে/i.test(msg);
+            const t = document.createElement('div');
+            t.className = 'app-toast' + (isErr ? ' err' : '');
+            t.innerHTML = '<i class="fas ' + (isErr ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i><span></span>';
+            t.querySelector('span').textContent = msg;
+            t.onclick = () => t.remove();
+            wrap.appendChild(t);
+            requestAnimationFrame(() => t.classList.add('in'));
+            while (wrap.children.length > 3) wrap.firstChild.remove();
+            setTimeout(() => { t.classList.remove('in'); setTimeout(() => t.remove(), 220); }, 3200);
+            return Promise.resolve();
+        }
+        function showInputPopup(title, label, initialValue = '', inputType = 'number') {
+            return new Promise(resolve => {
+                const overlay = document.getElementById('app-input-popup');
+                const input = document.getElementById('app-input-value');
+                document.getElementById('app-input-title').textContent = title;
+                document.getElementById('app-input-label').textContent = label;
+                input.type = inputType;
+                input.placeholder = inputType === 'text' ? 'Write your message...' : '';
+                input.value = initialValue ?? '';
+                overlay.classList.add('show');
+                const finish = value => { overlay.classList.remove('show'); resolve(value); };
+                document.getElementById('app-input-cancel').onclick = () => finish(null);
+                document.getElementById('app-input-save').onclick = () => finish(input.value);
+                overlay.onclick = e => { if (e.target === overlay) finish(null); };
+                input.focus(); input.select();
+            });
+        }
+        window.alert = message => { showNoticePopup(message); };
+        document.addEventListener('invalid', event => {
+            event.preventDefault();
+            showNoticePopup(event.target.validationMessage || 'Please complete this field.', 'Please check the form');
+        }, true);
+
+        // ==========================================
+        // 1. FIREBASE CONFIGURATION (Your Config)
+        // ==========================================
+        const firebaseConfig = {
+  apiKey: "AIzaSyA8J1Ea4j-xlrf5oJ7LVhMZJj5dVhI70D0",
+  authDomain: "adminuser-a59b2.firebaseapp.com",
+  databaseURL: "https://adminuser-a59b2-default-rtdb.firebaseio.com",
+  projectId: "adminuser-a59b2",
+  storageBucket: "adminuser-a59b2.firebasestorage.app",
+  messagingSenderId: "72072329676",
+  appId: "1:72072329676:web:9fc68176313b1acebc4569",
+  measurementId: "G-D7N4KQ271V"
+};
+
+        // ==========================================
+        // 2. IMPORTS
+        // ==========================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs, addDoc, serverTimestamp, onSnapshot, runTransaction, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ==========================================
+        // 3. INITIALIZATION
+        // ==========================================
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // ==========================================
+        // 4. ADMIN PIN LOGIC
+        // ==========================================
+        const ADMIN_PIN = "1234"; // Admin PIN
+        
+        // Check if admin is already logged in (session storage)
+        if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+            document.getElementById('pin-screen').style.display = 'none';
+            document.getElementById('admin-main-panel').style.display = 'block';
+            loadAllData();
+        }
+
+        function verifyAdminPin() {
+            const enteredPin = document.getElementById('admin-pin-input').value;
+            const errorMsg = document.getElementById('pin-error-msg');
+            
+            if (enteredPin === ADMIN_PIN) {
+                sessionStorage.setItem('isAdminLoggedIn', 'true');
+                document.getElementById('pin-screen').style.display = 'none';
+                document.getElementById('admin-main-panel').style.display = 'block';
+                loadAllData();
+            } else {
+                errorMsg.style.display = 'block';
+                document.getElementById('admin-pin-input').value = '';
+                setTimeout(() => { errorMsg.style.display = 'none'; }, 3000);
+            }
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('isAdminLoggedIn');
+            window.location.reload();
+        }
+
+        // Load all data after successful PIN entry
+        function loadAllData() {
+            cleanupExpiredPackages();
+            loadDashboardData();
+            loadProducts();
+            startOrdersWatcher();
+            loadOrders();
+            loadDeposits();
+            loadUsers();
+            loadCategories();
+            loadPaymentSettings();
+            loadAppSettings();
+            loadSliderData();
+            loadHomeSettings();
+            loadPopupSettings();
+            loadSocialLinks();
+        }
+
+        // Allow Enter key to submit PIN
+        document.getElementById('admin-pin-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') verifyAdminPin();
+        });
+
+        // ==========================================
+        // 5. NAVIGATION
+        // ==========================================
+        function showView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById('view-' + viewName);
+            if (target) target.classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active');
+                if (el.dataset.view === viewName) el.classList.add('active');
+            });
+
+            if (viewName === 'dashboard') loadDashboardData();
+            if (viewName === 'products') loadProducts();
+            if (viewName === 'orders') loadOrders();
+            if (viewName === 'deposits') loadDeposits();
+            if (viewName === 'users') loadUsers();
+            if (viewName === 'categories') { closePackagePage(); }
+            if (viewName === 'settings') {
+                loadPaymentSettings();
+                loadAppSettings();
+                loadSliderData();
+                loadHomeSettings();
+                loadPopupSettings();
+                loadSocialLinks();
+            }
+        }
+
+        // ==========================================
+        // 6. SEARCH FUNCTIONS
+        // ==========================================
+        function filterProducts() {
+            const search = document.getElementById('product-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#products-table-body tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(search) ? '' : 'none';
+            });
+        }
+
+        function filterOrders() {
+            const search = document.getElementById('order-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#orders-table-body tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(search) ? '' : 'none';
+            });
+        }
+
+        function filterDeposits() {
+            const search = document.getElementById('deposit-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#deposits-table-body tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(search) ? '' : 'none';
+            });
+        }
+
+        function filterUsers() {
+            const search = document.getElementById('user-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#users-table-body tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(search) ? '' : 'none';
+            });
+        }
+
+        // ==========================================
+        // 7. DASHBOARD LOGIC
+        // ==========================================
+        async function loadDashboardData() {
+            try {
+                const usersSnap = await getDocs(collection(db, "users"));
+                document.getElementById('stat-users').textContent = usersSnap.size;
+
+                const ordersSnap = await getDocs(collection(db, "orders"));
+                let pendingOrders = 0;
+                let recentOrdersHtml = '';
+                const ordersList = [];
+                ordersSnap.forEach(doc => {
+                    const data = doc.data();
+                    ordersList.push({ id: doc.id, ...data });
+                    if (data.status === 'pending') pendingOrders++;
+                });
+                ordersList.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                
+                document.getElementById('stat-orders').textContent = ordersList.length;
+                document.getElementById('stat-pending').textContent = pendingOrders;
+                
+                ordersList.slice(0, 5).forEach(order => {
+                    recentOrdersHtml += `
+                        <div class="flex justify-between items-center py-2 border-b last:border-0 text-xs">
+                            <div>
+                                <p class="font-bold">${order.gameName}</p>
+                                <p class="text-gray-500">${order.userName}</p>
+                            </div>
+                            <span class="font-bold text-orange-500">৳${order.price}</span>
+                        </div>
+                    `;
+                });
+                document.getElementById('recent-orders-list').innerHTML = recentOrdersHtml || '<p class="text-xs text-gray-400 text-center py-4">No recent orders.</p>';
+
+                const depositsSnap = await getDocs(collection(db, "depositRequests"));
+                let pendingDeposits = 0;
+                let recentDepositsHtml = '';
+                const depositsList = [];
+                depositsSnap.forEach(doc => {
+                    const data = doc.data();
+                    depositsList.push({ id: doc.id, ...data });
+                    if (data.status === 'pending') pendingDeposits++;
+                });
+                depositsList.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                
+                document.getElementById('stat-deposits').textContent = pendingDeposits;
+                
+                depositsList.slice(0, 5).forEach(dep => {
+                    recentDepositsHtml += `
+                        <div class="flex justify-between items-center py-2 border-b last:border-0 text-xs">
+                            <div>
+                                <p class="font-bold">${dep.method}</p>
+                                <p class="text-gray-500">${dep.userName}</p>
+                            </div>
+                            <span class="font-bold text-green-600">৳${dep.amount}</span>
+                        </div>
+                    `;
+                });
+                document.getElementById('recent-deposits-list').innerHTML = recentDepositsHtml || '<p class="text-xs text-gray-400 text-center py-4">No recent deposits.</p>';
+
+            } catch (error) {
+                console.error("Dashboard error: ", error);
+            }
+        }
+
+        // ==========================================
+        // 8. PRODUCT MANAGEMENT
+        // ==========================================
+        const TYPE_LABELS = { flash_sale: 'Flash Sale', hot_product: 'Hot Product', others: 'Others Games' };
+        function normType(t) { return TYPE_LABELS[t] ? t : 'others'; }
+        function isStockOut(p) { return p.stock === 'stock_out' || (!p.stock && p.type === 'stock_out'); }
+        function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+        async function loadProducts() {
+            const tbody = document.getElementById('products-table-body');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+            
+            try {
+                const q = query(collection(db, "products"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-400">No products found. Add one!</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                querySnapshot.forEach((d) => {
+                    const p = d.data();
+                    const statusBadge = p.active ? '<span class="text-green-600 font-bold text-xs">Active</span>' : '<span class="text-red-600 font-bold text-xs">Inactive</span>';
+                    const stockBadge = isStockOut(p) ? '<span class="text-red-600 font-bold text-xs">Stock Out</span>' : '<span class="text-green-600 font-bold text-xs">In Stock</span>';
+                    const pkgCount = Array.isArray(p.packages) ? p.packages.length : 0;
+                    html += `
+                        <tr>
+                            <td><img src="${esc(p.imageUrl) || 'https://via.placeholder.com/50'}" class="w-10 h-10 rounded object-cover"></td>
+                            <td class="font-bold">${esc(p.name)}</td>
+                            <td>${TYPE_LABELS[normType(p.type)]}</td>
+                            <td class="font-bold text-orange-600">${pkgCount}</td>
+                            <td>${stockBadge}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <button class="btn-warning mr-1" onclick="editProduct('${d.id}')"><i class="fas fa-edit"></i></button>
+                                <button class="btn-danger" onclick="deleteProduct('${d.id}')"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading products: ", error);
+            }
+        }
+
+        function openAddProductModal() {
+            document.getElementById('modal-title').textContent = 'Add Product';
+            document.getElementById('edit-product-id').value = '';
+            document.getElementById('prod-name').value = '';
+            document.getElementById('prod-type').value = 'flash_sale';
+            document.getElementById('prod-stock').value = 'in_stock';
+            document.getElementById('prod-image').value = '';
+            document.getElementById('prod-status').value = 'true';
+            document.getElementById('product-modal').classList.add('active');
+        }
+
+        async function saveProduct() {
+            const id = document.getElementById('edit-product-id').value;
+            const name = document.getElementById('prod-name').value.trim();
+            const type = document.getElementById('prod-type').value;
+            const stock = document.getElementById('prod-stock').value;
+            const imageUrl = document.getElementById('prod-image').value.trim();
+            const active = document.getElementById('prod-status').value === 'true';
+
+            if (!name) {
+                alert("Please enter the product name.");
+                return;
+            }
+
+            // Packages are managed from the Categories page, so they are not touched here.
+            const productData = {
+                name, type, stock, imageUrl: imageUrl || 'https://via.placeholder.com/100',
+                active, updatedAt: serverTimestamp()
+            };
+
+            try {
+                if (id) {
+                    if (!(await showPermissionPopup('Confirm Update', 'Are you sure you want to update this product?', 'Update'))) return;
+                    await updateDoc(doc(db, "products", id), productData);
+                    alert("Product updated successfully!");
+                } else {
+                    productData.packages = [];
+                    productData.createdAt = serverTimestamp();
+                    await addDoc(collection(db, "products"), productData);
+                    alert("Product added successfully!");
+                }
+                closeModal('product-modal');
+                loadProducts();
+            } catch (error) {
+                console.error("Error saving product: ", error);
+                alert("Failed to save product.");
+            }
+        }
+
+        async function editProduct(id) {
+            try {
+                const docSnap = await getDoc(doc(db, "products", id));
+                if (docSnap.exists()) {
+                    const p = docSnap.data();
+                    document.getElementById('modal-title').textContent = 'Edit Product';
+                    document.getElementById('edit-product-id').value = id;
+                    document.getElementById('prod-name').value = p.name || '';
+                    document.getElementById('prod-type').value = normType(p.type);
+                    document.getElementById('prod-stock').value = isStockOut(p) ? 'stock_out' : 'in_stock';
+                    document.getElementById('prod-image').value = p.imageUrl || '';
+                    document.getElementById('prod-status').value = p.active ? 'true' : 'false';
+                    document.getElementById('product-modal').classList.add('active');
+                }
+            } catch (error) {
+                console.error("Error fetching product: ", error);
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (await showPermissionPopup("Confirm Delete", "Are you sure you want to delete this product?", "Delete")) {
+                try {
+                    await deleteDoc(doc(db, "products", id));
+                    alert("Product deleted!");
+                    loadProducts();
+                } catch (error) {
+                    console.error("Error deleting product: ", error);
+                }
+            }
+        }
+
+        // ==========================================
+        // 9. ORDER MANAGEMENT
+        // ==========================================
+        let ordersCache = [];
+        let ordersWatcherStarted = false;
+
+        function escAdmin(v) {
+            return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        function renderOrders(orders) {
+            const tbody = document.getElementById('orders-table-body');
+            if (!orders.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-400">No orders found.</td></tr>';
+                return;
+            }
+            let html = '';
+            orders.forEach(order => {
+                const statusBadge = `<span class="status-badge status-${order.status}">${String(order.status).toUpperCase()}</span>`;
+                const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString() : 'Just now';
+                const msgCount = Array.isArray(order.adminMessages) ? order.adminMessages.length : 0;
+                const msgBtn = `<button class="btn-primary" style="padding:5px 9px;font-size:.65rem;margin-left:4px" onclick="sendOrderMessage('${order.id}')" title="Send message to user"><i class="fas fa-comment-dots"></i>${msgCount ? ' ' + msgCount : ''}</button>`;
+                let actionBtns = '';
+                if (order.status === 'pending') {
+                    actionBtns = `
+                        <button class="btn-success mr-1" onclick="updateOrderStatus('${order.id}', 'completed')"><i class="fas fa-check"></i></button>
+                        <button class="btn-danger" onclick="updateOrderStatus('${order.id}', 'rejected')"><i class="fas fa-times"></i></button>${msgBtn}`;
+                } else {
+                    actionBtns = `<span class="text-xs text-gray-400">Processed</span>${msgBtn}`;
+                }
+                html += `
+                    <tr>
+                        <td class="font-mono text-[10px]">#${order.id.slice(-6)}</td>
+                        <td class="font-bold text-xs">${escAdmin(order.userName)}</td>
+                        <td class="text-xs">${escAdmin(order.gameName)} <br> <span class="text-gray-500">${escAdmin(order.packageName)}</span></td>
+                        <td class="font-bold text-orange-600">৳${escAdmin(order.price)}</td>
+                        <td class="text-xs">${date}</td>
+                        <td>${statusBadge}</td>
+                        <td style="white-space:nowrap">${actionBtns}</td>
+                    </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function updateOrdersNavBadge() {
+            const pending = ordersCache.filter(o => o.status === 'pending').length;
+            const nav = document.querySelector('.nav-item[data-view="orders"]');
+            if (!nav) return;
+            let badge = nav.querySelector('.nav-badge');
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'nav-badge';
+                badge.style.cssText = 'position:absolute;top:0;right:18%;background:#EF4444;color:#fff;border-radius:999px;font-size:.55rem;font-weight:800;padding:1px 5px;min-width:14px;text-align:center';
+                nav.style.position = 'relative';
+                nav.appendChild(badge);
+            }
+            badge.textContent = pending;
+            badge.style.display = pending ? '' : 'none';
+        }
+
+        function beep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = ctx.createOscillator(), g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.value = 880; g.gain.value = 0.15;
+                o.start(); o.stop(ctx.currentTime + 0.25);
+            } catch (e) {}
+        }
+
+        function showNewOrderToast(order) {
+            let wrap = document.getElementById('new-order-toasts');
+            if (!wrap) {
+                wrap = document.createElement('div');
+                wrap.id = 'new-order-toasts';
+                wrap.style.cssText = 'position:fixed;top:64px;left:10px;right:10px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none';
+                document.body.appendChild(wrap);
+            }
+            const t = document.createElement('div');
+            t.style.cssText = 'pointer-events:auto;background:#fff;border-left:5px solid #FF6B00;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:.78rem';
+            t.innerHTML = `
+                <i class="fas fa-bell" style="color:#FF6B00;font-size:1.2rem"></i>
+                <div style="flex:1;min-width:0">
+                    <div style="font-weight:800">New Order! ${escAdmin(order.userName)}</div>
+                    <div style="color:#6B7280">${escAdmin(order.gameName)} - ${escAdmin(order.packageName)} · ৳${escAdmin(order.price)}</div>
+                </div>
+                <button class="btn-primary" style="padding:6px 10px;font-size:.7rem">Message</button>`;
+            t.querySelector('button').onclick = () => { t.remove(); sendOrderMessage(order.id); };
+            wrap.appendChild(t);
+            setTimeout(() => t.remove(), 12000);
+        }
+
+        function startOrdersWatcher() {
+            if (ordersWatcherStarted) return;
+            ordersWatcherStarted = true;
+            let first = true;
+            onSnapshot(query(collection(db, "orders")), (snap) => {
+                const orders = [];
+                snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
+                orders.sort((a, b) => (b.createdAt?.toMillis() || Date.now()) - (a.createdAt?.toMillis() || Date.now()));
+                ordersCache = orders;
+                renderOrders(orders);
+                updateOrdersNavBadge();
+                if (!first) {
+                    snap.docChanges().forEach(ch => {
+                        if (ch.type === 'added' && !ch.doc.metadata.hasPendingWrites) {
+                            showNewOrderToast({ id: ch.doc.id, ...ch.doc.data() });
+                            beep();
+                            loadDashboardData();
+                        }
+                    });
+                }
+                first = false;
+            }, (err) => console.error("Orders watcher error:", err));
+        }
+
+        async function loadOrders() {
+            // Live watcher keeps the table up to date; this just ensures it is running.
+            startOrdersWatcher();
+            if (ordersCache.length) renderOrders(ordersCache);
+        }
+
+        async function sendOrderMessage(orderId) {
+            const order = ordersCache.find(o => o.id === orderId);
+            const label = order ? `${order.userName} - ${order.packageName}` : 'Message';
+            const text = await showInputPopup('Message to user', label, '', 'text');
+            if (text === null) return;
+            const msg = String(text).trim();
+            if (!msg) return;
+            try {
+                await updateDoc(doc(db, "orders", orderId), {
+                    adminMessages: arrayUnion({ text: msg, at: Date.now() }),
+                    updatedAt: serverTimestamp()
+                });
+                alert("Message sent! User will see it in order history.");
+            } catch (error) {
+                console.error("Error sending message: ", error);
+                alert("Failed to send message.");
+            }
+        }
+
+        async function updateOrderStatus(orderId, status) {
+            if (!(await showPermissionPopup("Confirm Update", `Are you sure you want to mark this order as ${status}?`, "Update"))) return;
+            
+            try {
+                const orderRef = doc(db, "orders", orderId);
+                const orderSnap = await getDoc(orderRef);
+                const orderData = orderSnap.data();
+
+                if (status === 'rejected' && orderData.paymentMethod === 'wallet') {
+                    const userRef = doc(db, "users", orderData.userId);
+                    await runTransaction(db, async (transaction) => {
+                        const userDoc = await transaction.get(userRef);
+                        if (!userDoc.exists()) throw "User does not exist";
+                        
+                        const newBalance = (userDoc.data().walletBalance || 0) + orderData.price;
+                        transaction.update(userRef, { walletBalance: newBalance });
+                        transaction.update(orderRef, { status: 'rejected', updatedAt: serverTimestamp() });
+                    });
+                    alert("Order rejected and wallet refunded!");
+                } else {
+                    await updateDoc(orderRef, { status: status, updatedAt: serverTimestamp() });
+                    alert("Order status updated to " + status);
+                }
+                loadDashboardData();
+            } catch (error) {
+                console.error("Error updating order: ", error);
+                alert("Failed to update order.");
+            }
+        }
+
+        // ==========================================
+        // 10. DEPOSIT MANAGEMENT
+        // ==========================================
+        async function loadDeposits() {
+            const tbody = document.getElementById('deposits-table-body');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+            
+            try {
+                const q = query(collection(db, "depositRequests"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-400">No deposit requests found.</td></tr>';
+                    return;
+                }
+
+                const deposits = [];
+                querySnapshot.forEach(doc => deposits.push({ id: doc.id, ...doc.data() }));
+                deposits.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+
+                let html = '';
+                deposits.forEach(dep => {
+                    const statusClass = `status-${dep.status}`;
+                    const statusBadge = `<span class="status-badge ${statusClass}">${dep.status.toUpperCase()}</span>`;
+                    const date = dep.createdAt ? dep.createdAt.toDate().toLocaleDateString() : 'Just now';
+                    
+                    let actionBtns = '';
+                    if (dep.status === 'pending') {
+                        actionBtns = `
+                            <button class="btn-success mr-1" onclick="approveDeposit('${dep.id}', '${dep.userId}', ${dep.amount})"><i class="fas fa-check"></i></button>
+                            <button class="btn-danger" onclick="rejectDeposit('${dep.id}')"><i class="fas fa-times"></i></button>
+                        `;
+                    } else {
+                        actionBtns = `<span class="text-xs text-gray-400">Processed</span>`;
+                    }
+
+                    html += `
+                        <tr>
+                            <td class="font-bold text-xs">${dep.userName}</td>
+                            <td class="font-bold text-green-600">৳${dep.amount}</td>
+                            <td class="text-xs">${dep.method}</td>
+                            <td class="font-mono text-[10px] text-gray-500">${dep.txId}</td>
+                            <td class="text-xs">${date}</td>
+                            <td>${statusBadge}</td>
+                            <td>${actionBtns}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading deposits: ", error);
+            }
+        }
+
+        async function approveDeposit(depositId, userId, amount) {
+            if (!(await showPermissionPopup("Confirm Deposit Approval", "Are you sure you want to approve this deposit? This will add money to the user's wallet?", "Approve"))) return;
+            
+            try {
+                const depositRef = doc(db, "depositRequests", depositId);
+                const userRef = doc(db, "users", userId);
+                
+                await runTransaction(db, async (transaction) => {
+                    const depositDoc = await transaction.get(depositRef);
+                    if (!depositDoc.exists()) throw "Deposit request does not exist!";
+                    if (depositDoc.data().status !== 'pending') throw "Deposit already processed!";
+                    
+                    const userDoc = await transaction.get(userRef);
+                    if (!userDoc.exists()) throw "User does not exist!";
+                    
+                    transaction.update(depositRef, { status: 'completed', processedAt: serverTimestamp() });
+                    
+                    const currentBalance = userDoc.data().walletBalance || 0;
+                    transaction.update(userRef, { walletBalance: currentBalance + amount });
+                    
+                    const transRef = doc(collection(db, "walletTransactions"));
+                    transaction.set(transRef, {
+                        userId: userId,
+                        amount: amount,
+                        type: 'deposit',
+                        method: depositDoc.data().method,
+                        txId: depositDoc.data().txId,
+                        createdAt: serverTimestamp()
+                    });
+                });
+                
+                alert("Deposit approved and balance added!");
+                loadDeposits();
+                loadDashboardData();
+            } catch (error) {
+                console.error("Error approving deposit: ", error);
+                alert("Failed to approve deposit: " + error);
+            }
+        }
+
+        async function rejectDeposit(depositId) {
+            if (!(await showPermissionPopup("Confirm Update", "Are you sure you want to reject this deposit request?", "Reject"))) return;
+            try {
+                await updateDoc(doc(db, "depositRequests", depositId), { status: 'rejected', processedAt: serverTimestamp() });
+                alert("Deposit request rejected.");
+                loadDeposits();
+                loadDashboardData();
+            } catch (error) {
+                console.error("Error rejecting deposit: ", error);
+            }
+        }
+
+        // ==========================================
+        // 11. USER MANAGEMENT
+        // ==========================================
+        async function loadUsers() {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400">Loading...</td></tr>';
+            
+            try {
+                const q = query(collection(db, "users"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400">No users found.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                querySnapshot.forEach((doc) => {
+                    const user = doc.data();
+                    const statusBadge = user.isAdmin ? '<span class="text-blue-600 font-bold text-xs">Admin</span>' : '<span class="text-green-600 font-bold text-xs">User</span>';
+                    html += `
+                        <tr>
+                            <td class="font-bold text-xs">${user.name || 'Unknown'}</td>
+                            <td class="text-xs">${user.email}</td>
+                            <td class="font-bold text-orange-600">৳${user.walletBalance || 0}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <button class="btn-outline py-1 px-2 text-xs" onclick="editUserWallet('${doc.id}', ${user.walletBalance || 0})"><i class="fas fa-edit"></i> Wallet</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading users: ", error);
+            }
+        }
+
+        async function editUserWallet(userId, currentBalance) {
+            const newBalance = await showInputPopup("Update Wallet Balance", "Enter new wallet balance:", currentBalance);
+            if (newBalance !== null && !isNaN(newBalance)) {
+                if (!(await showPermissionPopup("Confirm Update", "Update this user's wallet balance?", "Update"))) return;
+                try {
+                    await updateDoc(doc(db, "users", userId), { walletBalance: parseFloat(newBalance) });
+                    alert("Wallet balance updated!");
+                    loadUsers();
+                } catch (error) {
+                    console.error("Error updating wallet: ", error);
+                    alert("Failed to update wallet.");
+                }
+            }
+        }
+
+        // ==========================================
+        // 12. CATEGORIES PAGE: products list + package manager
+        // ==========================================
+        let catProductId = null;
+
+        async function loadCategories() {
+            const grid = document.getElementById('cat-products-grid');
+            grid.innerHTML = '<p class="text-xs text-gray-400 text-center py-4 col-span-3">Loading...</p>';
+            try {
+                const snap = await getDocs(query(collection(db, "products")));
+                if (snap.empty) {
+                    grid.innerHTML = '<p class="text-xs text-gray-400 text-center py-4 col-span-3">No products yet. Add one from Products.</p>';
+                    return;
+                }
+                let html = '';
+                snap.forEach((d) => {
+                    const p = d.data();
+                    const pkgCount = Array.isArray(p.packages) ? p.packages.length : 0;
+                    html += `
+                        <div class="cat-product-card card" style="padding:0;margin:0;overflow:hidden;cursor:pointer;text-align:center;" onclick="openPackagePage('${d.id}')">
+                            <img src="${esc(p.imageUrl) || 'https://via.placeholder.com/100'}" style="width:100%;height:90px;object-fit:cover;">
+                            <div style="padding:6px 4px;">
+                                <p class="font-bold" style="font-size:0.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(p.name)}</p>
+                                <p class="text-gray-500" style="font-size:0.6rem;">${pkgCount} packages</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                grid.innerHTML = html;
+                filterCatProducts();
+            } catch (error) {
+                console.error("Error loading products for categories: ", error);
+                grid.innerHTML = '<p class="text-xs text-red-500 text-center py-4 col-span-3">Failed to load products.</p>';
+            }
+        }
+
+        function filterCatProducts() {
+            const search = document.getElementById('cat-product-search').value.toLowerCase();
+            document.querySelectorAll('#cat-products-grid .cat-product-card').forEach(card => {
+                card.style.display = card.innerText.toLowerCase().includes(search) ? '' : 'none';
+            });
+        }
+
+        async function openPackagePage(productId) {
+            try {
+                const snap = await getDoc(doc(db, "products", productId));
+                if (!snap.exists()) return;
+                catProductId = productId;
+                document.getElementById('pkg-page-title').textContent = snap.data().name || 'Product';
+                document.getElementById('pkg-name').value = '';
+                document.getElementById('pkg-price').value = '';
+                document.getElementById('pkg-time').value = '';
+                document.getElementById('pkg-rules').value = snap.data().rules || '';
+                renderPackages(snap.data().packages || []);
+                document.getElementById('cat-list-page').style.display = 'none';
+                document.getElementById('cat-package-page').style.display = 'block';
+                window.scrollTo(0, 0);
+            } catch (error) {
+                console.error("Error opening product: ", error);
+                alert("Failed to open product.");
+            }
+        }
+
+        function closePackagePage() {
+            catProductId = null;
+            document.getElementById('cat-package-page').style.display = 'none';
+            document.getElementById('cat-list-page').style.display = 'block';
+            loadCategories();
+        }
+
+        let currentPackages = [];
+        function timeLeftText(expiresAt) {
+            const ms = expiresAt - Date.now();
+            if (ms <= 0) return 'Expired';
+            const m = Math.floor(ms / 60000);
+            if (m < 60) return m + ' min left';
+            const h = Math.floor(m / 60);
+            if (h < 48) return h + 'h ' + (m % 60) + 'm left';
+            return Math.floor(h / 24) + ' days left';
+        }
+
+        function renderPackages(packages) {
+            currentPackages = packages || [];
+            const list = document.getElementById('pkg-list');
+            if (!currentPackages.length) {
+                list.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">No packages yet.</p>';
+                return;
+            }
+            list.innerHTML = currentPackages.map(pkg => `
+                <div class="flex justify-between items-center py-2 border-b last:border-0 text-xs">
+                    <div>
+                        <p class="font-bold">${esc(pkg.name)}</p>
+                        <p class="text-orange-600 font-bold">৳${esc(pkg.price)}</p>
+                        ${pkg.expiresAt ? `<p class="text-gray-500"><i class="fas fa-clock"></i> ${timeLeftText(pkg.expiresAt)}</p>` : ''}
+                    </div>
+                    <button class="btn-danger" onclick="deletePackage('${esc(pkg.id)}')"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        // Permanently removes packages whose time is over (runs while the admin panel is open).
+        async function cleanupExpiredPackages() {
+            if (sessionStorage.getItem('isAdminLoggedIn') !== 'true') return;
+            try {
+                const snap = await getDocs(collection(db, "products"));
+                const now = Date.now();
+                for (const d of snap.docs) {
+                    const pkgs = d.data().packages || [];
+                    const kept = pkgs.filter(p => !p.expiresAt || p.expiresAt > now);
+                    if (kept.length !== pkgs.length) {
+                        await updateDoc(d.ref, { packages: kept, updatedAt: serverTimestamp() });
+                        if (catProductId === d.id) renderPackages(kept);
+                    }
+                }
+            } catch (error) {
+                console.error("Expired package cleanup failed: ", error);
+            }
+        }
+        setInterval(cleanupExpiredPackages, 30000);
+        setInterval(() => { if (catProductId) renderPackages(currentPackages.filter(p => !p.expiresAt || p.expiresAt > Date.now())); }, 30000);
+
+        async function saveRules() {
+            if (!catProductId) return;
+            try {
+                await updateDoc(doc(db, "products", catProductId), { rules: document.getElementById('pkg-rules').value, updatedAt: serverTimestamp() });
+                alert("Rules saved!");
+            } catch (error) {
+                console.error("Error saving rules: ", error);
+                alert("Failed to save rules.");
+            }
+        }
+
+        async function addPackage() {
+            if (!catProductId) return;
+            const name = document.getElementById('pkg-name').value.trim();
+            const price = parseFloat(document.getElementById('pkg-price').value);
+            if (!name || isNaN(price) || price < 0) {
+                alert("Please enter a package name and a valid price.");
+                return;
+            }
+            const timeVal = parseFloat(document.getElementById('pkg-time').value);
+            const unit = document.getElementById('pkg-time-unit').value;
+            const unitMs = { minutes: 60000, hours: 3600000, days: 86400000 }[unit];
+            const expiresAt = (!isNaN(timeVal) && timeVal > 0) ? Date.now() + Math.round(timeVal * unitMs) : null;
+            try {
+                const ref = doc(db, "products", catProductId);
+                let updated = [];
+                await runTransaction(db, async (transaction) => {
+                    const snap = await transaction.get(ref);
+                    const current = (snap.data().packages || []).filter(p => !p.expiresAt || p.expiresAt > Date.now());
+                    const newPkg = { id: 'pkg_' + Date.now() + '_' + Math.floor(Math.random() * 1000), name, price };
+                    if (expiresAt) newPkg.expiresAt = expiresAt;
+                    updated = [...current, newPkg];
+                    transaction.update(ref, { packages: updated, updatedAt: serverTimestamp() });
+                });
+                document.getElementById('pkg-name').value = '';
+                document.getElementById('pkg-price').value = '';
+                document.getElementById('pkg-time').value = '';
+                renderPackages(updated);
+            } catch (error) {
+                console.error("Error adding package: ", error);
+                alert("Failed to add package.");
+            }
+        }
+
+        async function deletePackage(pkgId) {
+            if (!catProductId) return;
+            if (!(await showPermissionPopup("Confirm Delete", "Are you sure you want to delete this package?", "Delete"))) return;
+            try {
+                const ref = doc(db, "products", catProductId);
+                let updated = [];
+                await runTransaction(db, async (transaction) => {
+                    const snap = await transaction.get(ref);
+                    updated = (snap.data().packages || []).filter(p => p.id !== pkgId);
+                    transaction.update(ref, { packages: updated, updatedAt: serverTimestamp() });
+                });
+                renderPackages(updated);
+            } catch (error) {
+                console.error("Error deleting package: ", error);
+                alert("Failed to delete package.");
+            }
+        }
+
+        // ==========================================
+        // 13. SETTINGS & PAYMENT METHODS
+        // ==========================================
+        async function loadPaymentSettings() {
+            const container = document.getElementById('payment-settings-list');
+            container.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">Loading...</p>';
+            
+            try {
+                const q = query(collection(db, "paymentSettings"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    container.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">No payment methods configured.</p>';
+                    return;
+                }
+
+                let html = '';
+                querySnapshot.forEach((doc) => {
+                    const p = doc.data();
+                    const activeBadge = p.active ? '<span class="text-green-600 font-bold text-xs">Active</span>' : '<span class="text-red-600 font-bold text-xs">Inactive</span>';
+                    html += `
+                        <div class="flex justify-between items-center py-2 border-b last:border-0 text-xs">
+                            <div class="flex items-center gap-2">
+                                ${p.logoUrl ? `<img src="${esc(p.logoUrl)}" style="width:44px;height:30px;object-fit:contain;border:1px solid #eee;border-radius:6px;background:#fff;">` : ''}
+                                <div>
+                                    <p class="font-bold">${esc(p.name)} (${esc(p.number)})</p>
+                                    <p class="text-gray-500">${esc(p.instructions || 'No instructions')}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                ${activeBadge}
+                                <button class="text-red-500" onclick="deletePaymentMethod('${doc.id}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading payment settings: ", error);
+            }
+        }
+
+        function openAddPaymentModal() {
+            document.getElementById('pay-name').value = '';
+            document.getElementById('pay-number').value = '';
+            document.getElementById('pay-instructions').value = '';
+            document.getElementById('pay-brand').value = 'bKash';
+            document.getElementById('pay-name-wrap').style.display = 'none';
+            document.getElementById('payment-modal').classList.add('active');
+        }
+
+        async function savePaymentMethod() {
+            const brand = document.getElementById('pay-brand').value;
+            const name = (brand === 'other' ? document.getElementById('pay-name').value : brand).trim();
+            const number = document.getElementById('pay-number').value.trim();
+            const instructions = document.getElementById('pay-instructions').value.trim();
+            const logoUrl = '';
+
+            if (!name || !number) {
+                alert("Please fill Name and Number.");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "paymentSettings"), {
+                    name, number, logoUrl, instructions: instructions || 'Send Money', active: true, createdAt: serverTimestamp()
+                });
+                alert("Payment method added!");
+                closeModal('payment-modal');
+                loadPaymentSettings();
+            } catch (error) {
+                console.error("Error saving payment method: ", error);
+            }
+        }
+
+        async function deletePaymentMethod(id) {
+            if (await showPermissionPopup("Confirm Delete", "Are you sure you want to delete this payment method?", "Delete")) {
+                await deleteDoc(doc(db, "paymentSettings", id));
+                loadPaymentSettings();
+            }
+        }
+
+        async function loadAppSettings() {
+            try {
+                const docRef = doc(db, "settings", "app");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('setting-app-name').value = data.appName || '';
+                    document.getElementById('setting-app-logo').value = data.appLogo || '';
+                    document.getElementById('setting-brand-image').value = data.brandImage || '';
+                    document.getElementById('setting-helpline').value = data.helpline || '';
+                    document.getElementById('setting-notice').value = data.noticeText || '';
+                    document.getElementById('setting-help-link').value = data.helpLink ?? '';
+                    document.getElementById('setting-payment-banner').value = data.paymentBanner || '';
+                }
+            } catch (error) {
+                console.error("Error loading app settings: ", error);
+            }
+        }
+
+        async function saveAppSettings() {
+            const appName = document.getElementById('setting-app-name').value;
+            const appLogo = document.getElementById('setting-app-logo').value;
+            const brandImage = document.getElementById('setting-brand-image').value;
+            const helpline = document.getElementById('setting-helpline').value;
+            const noticeText = document.getElementById('setting-notice').value;
+            const helpLink = document.getElementById('setting-help-link').value.trim();
+            const paymentBanner = document.getElementById('setting-payment-banner').value.trim();
+
+            try {
+                await setDoc(doc(db, "settings", "app"), {
+                    appName, appLogo, brandImage, helpline, noticeText, helpLink, paymentBanner, updatedAt: serverTimestamp()
+                });
+                alert("App settings saved!");
+            } catch (error) {
+                console.error("Error saving app settings: ", error);
+            }
+        }
+
+        // Slider Management
+        async function loadSliderData() {
+            const container = document.getElementById('slider-list');
+            container.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">Loading...</p>';
+            
+            try {
+                const q = query(collection(db, "sliders"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    container.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">No sliders configured.</p>';
+                    return;
+                }
+
+                let html = '';
+                querySnapshot.forEach((doc) => {
+                    const s = doc.data();
+                    const activeBadge = s.active ? '<span class="text-green-600 font-bold text-xs">Active</span>' : '<span class="text-red-600 font-bold text-xs">Inactive</span>';
+                    html += `
+                        <div class="flex justify-between items-center py-2 border-b last:border-0 text-xs">
+                            <div>
+                                <img src="${s.imageUrl}" class="w-16 h-8 rounded object-cover mb-1">
+                                <p class="text-gray-500">Link: ${s.link || 'None'}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                ${activeBadge}
+                                <button class="text-red-500" onclick="deleteSlider('${doc.id}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading sliders: ", error);
+            }
+        }
+
+        function openAddSliderModal() {
+            document.getElementById('slider-image').value = '';
+            document.getElementById('slider-link').value = '';
+            document.getElementById('slider-active').value = 'true';
+            document.getElementById('slider-modal').classList.add('active');
+        }
+
+        async function saveSlider() {
+            const imageUrl = document.getElementById('slider-image').value;
+            const link = document.getElementById('slider-link').value;
+            const active = document.getElementById('slider-active').value === 'true';
+
+            if (!imageUrl) {
+                alert("Please fill Image URL.");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "sliders"), {
+                    imageUrl, link, active, createdAt: serverTimestamp()
+                });
+                alert("Slider added!");
+                closeModal('slider-modal');
+                loadSliderData();
+            } catch (error) {
+                console.error("Error saving slider: ", error);
+            }
+        }
+
+        async function deleteSlider(id) {
+            if (await showPermissionPopup("Confirm Delete", "Are you sure you want to delete this slider?", "Delete")) {
+                await deleteDoc(doc(db, "sliders", id));
+                loadSliderData();
+            }
+        }
+
+        async function loadHomeSettings() {
+            try {
+                const docRef = doc(db, "settings", "home");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('setting-flash-title').value = data.flashSaleTitle || '';
+                    document.getElementById('setting-hot-title').value = data.hotProductTitle || '';
+                    document.getElementById('setting-others-title').value = data.othersGamesTitle || '';
+                }
+            } catch (error) {
+                console.error("Error loading home settings: ", error);
+            }
+        }
+
+        async function saveHomeSettings() {
+            const flashSaleTitle = document.getElementById('setting-flash-title').value;
+            const hotProductTitle = document.getElementById('setting-hot-title').value;
+            const othersGamesTitle = document.getElementById('setting-others-title').value;
+
+            try {
+                await setDoc(doc(db, "settings", "home"), {
+                    flashSaleTitle, hotProductTitle, othersGamesTitle, updatedAt: serverTimestamp()
+                });
+                alert("Home settings saved!");
+            } catch (error) {
+                console.error("Error saving home settings: ", error);
+            }
+        }
+
+        async function loadPopupSettings() {
+            try {
+                const docRef = doc(db, "settings", "popup");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('popup-active').value = data.active ? 'true' : 'false';
+                    document.getElementById('popup-image').value = data.imageUrl || '';
+                    document.getElementById('popup-title').value = data.title || '';
+                    document.getElementById('popup-message').value = data.message || '';
+                }
+            } catch (error) {
+                console.error("Error loading popup settings: ", error);
+            }
+        }
+
+        async function savePopupSettings() {
+            const active = document.getElementById('popup-active').value === 'true';
+            const imageUrl = document.getElementById('popup-image').value;
+            const title = document.getElementById('popup-title').value;
+            const message = document.getElementById('popup-message').value;
+
+            try {
+                await setDoc(doc(db, "settings", "popup"), {
+                    active, imageUrl, title, message, updatedAt: serverTimestamp()
+                });
+                alert("Popup settings saved!");
+            } catch (error) {
+                console.error("Error saving popup settings: ", error);
+            }
+        }
+
+        const SOCIAL_ICONS = { telegram: 'Telegram', facebook: 'Facebook', whatsapp: 'WhatsApp', group: 'Group', youtube: 'YouTube', instagram: 'Instagram', email: 'Email', link: 'Other' };
+        function socialRowHtml(l = {}) {
+            const opts = Object.entries(SOCIAL_ICONS).map(([k, v]) => `<option value="${k}" ${l.icon === k ? 'selected' : ''}>${v}</option>`).join('');
+            const e = s => String(s ?? '').replace(/"/g, '&quot;');
+            return `<div class="social-row" style="border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:8px">
+                <div style="display:flex;gap:6px;margin-bottom:6px">
+                    <select class="sl-icon" style="flex:0 0 105px">${opts}</select>
+                    <input type="text" class="sl-sub" placeholder="Small text (Support)" value="${e(l.sub)}">
+                    <input type="text" class="sl-label" placeholder="Title (Telegram)" value="${e(l.label)}">
+                </div>
+                <div style="display:flex;gap:6px">
+                    <input type="text" class="sl-url" placeholder="https://t.me/..." value="${e(l.url)}">
+                    <button type="button" class="btn-outline" onclick="this.closest('.social-row').remove()"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>`;
+        }
+        function addSocialRow(l) {
+            document.getElementById('social-links-list').insertAdjacentHTML('beforeend', socialRowHtml(l));
+        }
+        async function loadSocialLinks() {
+            try {
+                const snap = await getDoc(doc(db, "settings", "social"));
+                const box = document.getElementById('social-links-list');
+                box.innerHTML = '';
+                const d = snap.exists() ? snap.data() : {};
+                let links = Array.isArray(d.links) ? d.links : [];
+                if (!links.length) {
+                    if (d.telegram) links.push({ icon: 'telegram', sub: 'Support', label: 'Telegram', url: d.telegram });
+                    if (d.facebook) links.push({ icon: 'facebook', sub: 'Group', label: 'Join Group', url: d.facebook });
+                    if (d.whatsapp) links.push({ icon: 'whatsapp', sub: 'Support', label: 'WhatsApp', url: d.whatsapp });
+                }
+                if (!links.length) links = [{ icon: 'telegram', sub: 'Support', label: 'Telegram', url: '' }];
+                box.innerHTML = links.map(socialRowHtml).join('');
+            } catch (error) {
+                console.error("Error loading social links: ", error);
+            }
+        }
+        async function saveSocialLinks() {
+            const links = [...document.querySelectorAll('#social-links-list .social-row')].map(r => ({
+                icon: r.querySelector('.sl-icon').value,
+                sub: r.querySelector('.sl-sub').value.trim(),
+                label: r.querySelector('.sl-label').value.trim(),
+                url: r.querySelector('.sl-url').value.trim()
+            })).filter(l => l.url);
+            try {
+                await setDoc(doc(db, "settings", "social"), { links, updatedAt: serverTimestamp() });
+                alert("Social links saved!");
+            } catch (error) {
+                console.error("Error saving social links: ", error);
+                alert("Failed to save social links.");
+            }
+        }
+        window.addSocialRow = addSocialRow;
+
+        async function addVoucher() {
+            const productName = document.getElementById('voucher-product-name').value;
+            const code = document.getElementById('voucher-code').value;
+
+            if (!productName || !code) {
+                alert("Please fill Product Name and Code.");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "voucherInventory"), {
+                    productName, code, status: 'available', assignedTo: null, assignedAt: null, createdAt: serverTimestamp()
+                });
+                alert("Voucher added to inventory!");
+                document.getElementById('voucher-product-name').value = '';
+                document.getElementById('voucher-code').value = '';
+            } catch (error) {
+                console.error("Error adding voucher: ", error);
+            }
+        }
+
+        // ==========================================
+        // 14. UTILITIES & MODALS
+        // ==========================================
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        window.showView = showView;
+        window.logoutAdmin = logoutAdmin;
+        window.verifyAdminPin = verifyAdminPin;
+        window.openAddProductModal = openAddProductModal;
+        window.saveProduct = saveProduct;
+        window.editProduct = editProduct;
+        window.deleteProduct = deleteProduct;
+        window.updateOrderStatus = updateOrderStatus;
+        window.sendOrderMessage = sendOrderMessage;
+        window.approveDeposit = approveDeposit;
+        window.rejectDeposit = rejectDeposit;
+        window.editUserWallet = editUserWallet;
+        window.filterCatProducts = filterCatProducts;
+        window.openPackagePage = openPackagePage;
+        window.closePackagePage = closePackagePage;
+        window.addPackage = addPackage;
+        window.saveRules = saveRules;
+        window.deletePackage = deletePackage;
+        window.openAddPaymentModal = openAddPaymentModal;
+        window.savePaymentMethod = savePaymentMethod;
+        window.deletePaymentMethod = deletePaymentMethod;
+        window.saveAppSettings = saveAppSettings;
+        window.saveHomeSettings = saveHomeSettings;
+        window.savePopupSettings = savePopupSettings;
+        window.saveSocialLinks = saveSocialLinks;
+        window.addVoucher = addVoucher;
+        window.closeModal = closeModal;
+        window.filterProducts = filterProducts;
+        window.filterOrders = filterOrders;
+        window.filterDeposits = filterDeposits;
+        window.filterUsers = filterUsers;
+        window.openAddSliderModal = openAddSliderModal;
+        window.saveSlider = saveSlider;
+        window.deleteSlider = deleteSlider;
+
+    </script>
+
+<div id="permission-popup" class="permission-overlay" role="dialog" aria-modal="true" aria-labelledby="permission-title">
+ <div class="permission-box"><div class="permission-icon"><i class="fas fa-shield-alt"></i></div><div id="permission-title" class="permission-title">Confirm action</div><p id="permission-message" class="permission-message">Are you sure?</p><div class="permission-actions"><button type="button" class="permission-cancel" id="permission-cancel">Cancel</button><button type="button" class="permission-confirm" id="permission-confirm">Confirm</button></div></div>
+</div>
+
+<div id="app-notice-popup" class="permission-overlay" role="dialog" aria-modal="true" aria-labelledby="app-notice-title">
+ <div class="permission-box">
+  <div class="permission-icon"><i class="fas fa-info-circle"></i></div>
+  <div id="app-notice-title" class="permission-title">Notice</div>
+  <p id="app-notice-message" class="permission-message"></p>
+  <div class="permission-actions"><button type="button" class="permission-confirm" id="app-notice-ok">OK</button></div>
+ </div>
+</div>
+<div id="app-input-popup" class="permission-overlay" role="dialog" aria-modal="true" aria-labelledby="app-input-title">
+ <div class="permission-box">
+  <div class="permission-icon"><i class="fas fa-edit"></i></div>
+  <div id="app-input-title" class="permission-title">Enter value</div>
+  <label id="app-input-label" for="app-input-value" class="permission-message"></label>
+  <input id="app-input-value" type="number" step="any" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #cbd5e1;border-radius:10px;margin:12px 0;font:inherit;">
+  <div class="permission-actions">
+   <button type="button" class="permission-cancel" id="app-input-cancel">Cancel</button>
+   <button type="button" class="permission-confirm" id="app-input-save">Save</button>
+  </div>
+ </div>
+</div>
+
+</body>
+</html>
