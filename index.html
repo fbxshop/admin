@@ -512,6 +512,19 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
                     <p class="text-xs text-gray-400 text-center py-4">Loading...</p>
                 </div>
             </div>
+
+            <div class="card" id="admin-live-leaderboard-card">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="font-bold text-sm">Live Leaderboard · Top 5</h3>
+                        <p class="text-xs text-gray-500">Completed order points · Live sync</p>
+                    </div>
+                    <span class="text-xs font-bold text-green-600"><i class="fas fa-circle text-[7px]"></i> LIVE</span>
+                </div>
+                <div id="admin-live-leaderboard">
+                    <p class="text-xs text-gray-400 text-center py-4">Loading leaderboard...</p>
+                </div>
+            </div>
         </section>
 
         <!-- 2. PRODUCT MANAGEMENT -->
@@ -726,6 +739,11 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
                 <div class="form-group">
                     <label>Payment Page Banner URL (পেমেন্ট পেজের ব্যানার ছবি)</label>
                     <input type="text" id="setting-payment-banner" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Add Money Guide Video URL (ইউজারের Add Money পেজে ভিডিও দেখাবে)</label>
+                    <input type="url" id="setting-add-money-video" placeholder="YouTube link বা direct MP4 video URL">
+                    <p class="text-xs text-gray-500 mt-1">YouTube link অথবা .mp4 ভিডিও লিংক দিন। খালি রাখলে ভিডিও অংশে placeholder দেখাবে।</p>
                 </div>
                 <button class="btn-primary w-full" onclick="saveAppSettings()">Save Settings</button>
             </div>
@@ -1061,12 +1079,16 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
             window.location.reload();
         }
 
+        let leaderboardUsersCache = [];
+        let leaderboardUsersWatcherStarted = false;
+
         // Load all data after successful PIN entry
         function loadAllData() {
             cleanupExpiredPackages();
             loadDashboardData();
             loadProducts();
             startOrdersWatcher();
+            startAdminLeaderboardWatcher();
             loadOrders();
             loadDeposits();
             loadUsers();
@@ -1150,6 +1172,103 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
                 const text = row.innerText.toLowerCase();
                 row.style.display = text.includes(search) ? '' : 'none';
             });
+        }
+
+        // ==========================================
+        // LIVE TOP 5 LEADERBOARD (DASHBOARD)
+        // ==========================================
+        function startAdminLeaderboardWatcher() {
+            if (leaderboardUsersWatcherStarted) return;
+            leaderboardUsersWatcherStarted = true;
+            onSnapshot(collection(db, "users"), (snap) => {
+                leaderboardUsersCache = [];
+                snap.forEach(d => leaderboardUsersCache.push({ id: d.id, ...d.data() }));
+                renderAdminLeaderboard();
+            }, (err) => {
+                console.error("Leaderboard users watcher error:", err);
+                const box = document.getElementById('admin-live-leaderboard');
+                if (box) box.innerHTML = '<p class="text-xs text-red-500 text-center py-3">Leaderboard could not load. Check Firestore access.</p>';
+            });
+        }
+
+        function renderAdminLeaderboard() {
+            const box = document.getElementById('admin-live-leaderboard');
+            if (!box) return;
+            const completedTotals = {};
+            const orderNames = {};
+            (ordersCache || []).forEach(order => {
+                if (String(order.status || '').toLowerCase() !== 'completed' || !order.userId) return;
+                const amount = Number(String(order.price ?? order.total ?? 0).replace(/[^0-9.\\-]/g, '')) || 0;
+                if (amount <= 0) return;
+                completedTotals[order.userId] = (completedTotals[order.userId] || 0) + amount;
+                orderNames[order.userId] = order.userName || orderNames[order.userId] || 'User';
+            });
+
+            const usersById = new Map((leaderboardUsersCache || []).map(u => [u.id, u]));
+            const allUserIds = new Set([
+                ...Object.keys(completedTotals),
+                ...(leaderboardUsersCache || []).filter(u => Number(u.leaderboardAmount ?? u.points) > 0).map(u => u.id)
+            ]);
+            const rows = Array.from(allUserIds).map(uid => {
+                const profile = usersById.get(uid) || {};
+                const points = Number(profile.points ?? completedTotals[uid] ?? 0) || 0;
+                const spend = Number(profile.leaderboardAmount ?? completedTotals[uid] ?? 0) || 0;
+                const rankNames = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond'];
+                const thresholds = [0, 101, 1001, 5001, 10001];
+                let rankIndex = thresholds.reduce((idx, min, i) => spend >= min ? i : idx, 0);
+                const override = rankNames.findIndex(r => r.toLowerCase() === String(profile.rankOverride || '').toLowerCase());
+                if (override >= 0) rankIndex = override;
+                return { uid, name: profile.name || orderNames[uid] || 'User', photo: profile.photo || profile.photoURL || profile.profilePhotoURL || '', points, spend, rank: rankNames[rankIndex], rankOverride: profile.rankOverride || '' };
+            }).filter(u => u.points > 0 || u.spend > 0)
+              .sort((a, b) => b.spend - a.spend || b.points - a.points);
+
+            const top = rows.slice(0, 5);
+            if (!top.length) {
+                box.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">No completed purchases yet.</p>';
+                return;
+            }
+            box.innerHTML = top.map((u, i) => `
+                <div class="flex items-center gap-2 py-3 border-b last:border-0">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold bg-orange-100 text-orange-700">${i + 1}</div>
+                    <div class="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-xs">${u.photo ? `<img src="${esc(u.photo)}" alt="" style="width:100%;height:100%;object-fit:cover">` : esc(String(u.name || 'U').slice(0,2).toUpperCase())}</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-xs truncate">${esc(u.name)}</p>
+                        <p class="text-[10px] text-gray-500">ID: ${esc(u.uid.slice(0, 12))}</p>
+                        <p class="text-[10px] font-bold text-orange-600">${esc(u.rank)} Rank · ৳${u.spend.toLocaleString('en-US', {maximumFractionDigits: 2})} leaderboard amount</p>
+                    </div>
+                    <button type="button" class="btn-outline py-1 px-2 text-[10px]" onclick="editLeaderboardUser('${u.uid}', ${u.spend}, '${u.rank}')"><i class="fas fa-edit"></i> Edit</button>
+                </div>
+            `).join('');
+        }
+
+        async function editLeaderboardUser(userId, currentAmount, currentRank) {
+            const nextAmountRaw = await showInputPopup("Update Leaderboard Amount", "Enter the leaderboard amount in Taka (৳):", currentAmount);
+            if (nextAmountRaw === null) return;
+            const nextAmount = Number(nextAmountRaw);
+            if (!Number.isFinite(nextAmount) || nextAmount < 0) {
+                alert("Please enter a valid non-negative amount.");
+                return;
+            }
+            const nextRankRaw = await showInputPopup("Update User Rank", "Enter Bronze, Silver, Gold, Platinum, Diamond, or Auto:", currentRank, "text");
+            if (nextRankRaw === null) return;
+            const nextRank = String(nextRankRaw).trim();
+            const allowedRanks = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'auto', ''];
+            if (!allowedRanks.includes(nextRank.toLowerCase())) {
+                alert("Invalid rank. Please use Bronze, Silver, Gold, Platinum, Diamond, or Auto.");
+                return;
+            }
+            if (!(await showPermissionPopup("Confirm Leaderboard Update", "Save this user's leaderboard amount and rank?", "Save"))) return;
+            try {
+                await updateDoc(doc(db, "users", userId), {
+                    points: nextAmount,
+                    leaderboardAmount: nextAmount,
+                    rankOverride: nextRank.toLowerCase() === 'auto' ? '' : nextRank[0]?.toUpperCase() + nextRank.slice(1).toLowerCase()
+                });
+                alert("Leaderboard amount and rank updated!");
+            } catch (error) {
+                console.error("Leaderboard update failed:", error);
+                alert("Could not update leaderboard. Check Firestore rules and connection.");
+            }
         }
 
         // ==========================================
@@ -1448,6 +1567,7 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
                 orders.sort((a, b) => (b.createdAt?.toMillis() || Date.now()) - (a.createdAt?.toMillis() || Date.now()));
                 ordersCache = orders;
                 renderOrders(orders);
+                renderAdminLeaderboard();
                 updateOrdersNavBadge();
                 if (!first) {
                     snap.docChanges().forEach(ch => {
@@ -1520,6 +1640,11 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
         // ==========================================
         // 10. DEPOSIT MANAGEMENT
         // ==========================================
+        function isValidAdminTransactionId(value) {
+            return /^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{5,64}$/.test(String(value || '').trim());
+        }
+        const depositActionLocks = new Set();
+
         async function loadDeposits() {
             const tbody = document.getElementById('deposits-table-body');
             tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-400">Loading...</td></tr>';
@@ -1543,10 +1668,14 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
                     const statusBadge = `<span class="status-badge ${statusClass}">${dep.status.toUpperCase()}</span>`;
                     const date = dep.createdAt ? dep.createdAt.toDate().toLocaleDateString() : 'Just now';
                     
+                    const validTxId = isValidAdminTransactionId(dep.txId);
+                    const txIdCell = validTxId
+                        ? `<td class="font-mono text-[10px] text-gray-500">${String(dep.txId).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}</td>`
+                        : `<td class="font-mono text-[10px] text-red-600" title="Invalid Transaction ID">${String(dep.txId || 'MISSING').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}<br><b>INVALID TXID</b></td>`;
                     let actionBtns = '';
                     if (dep.status === 'pending') {
                         actionBtns = `
-                            <button class="btn-success mr-1" onclick="approveDeposit('${dep.id}', '${dep.userId}', ${dep.amount})"><i class="fas fa-check"></i></button>
+                            ${validTxId ? `<button class="btn-success mr-1" onclick="approveDeposit('${dep.id}', '${dep.userId}', ${dep.amount})"><i class="fas fa-check"></i></button>` : `<button class="btn-success mr-1" disabled title="Invalid Transaction ID"><i class="fas fa-ban"></i></button>`}
                             <button class="btn-danger" onclick="rejectDeposit('${dep.id}')"><i class="fas fa-times"></i></button>
                         `;
                     } else {
@@ -1558,7 +1687,7 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
                             <td class="font-bold text-xs">${dep.userName}</td>
                             <td class="font-bold text-green-600">৳${dep.amount}</td>
                             <td class="text-xs">${dep.method}</td>
-                            <td class="font-mono text-[10px] text-gray-500">${dep.txId}</td>
+                            ${txIdCell}
                             <td class="text-xs">${date}</td>
                             <td>${statusBadge}</td>
                             <td>${actionBtns}</td>
@@ -1572,6 +1701,9 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
         }
 
         async function approveDeposit(depositId, userId, amount) {
+            if (depositActionLocks.has(depositId)) return;
+            depositActionLocks.add(depositId);
+            try {
             if (!(await showPermissionPopup("Confirm Deposit Approval", "Are you sure you want to approve this deposit? This will add money to the user's wallet?", "Approve"))) return;
             
             try {
@@ -1582,6 +1714,7 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
                     const depositDoc = await transaction.get(depositRef);
                     if (!depositDoc.exists()) throw "Deposit request does not exist!";
                     if (depositDoc.data().status !== 'pending') throw "Deposit already processed!";
+                    if (!isValidAdminTransactionId(depositDoc.data().txId)) throw "Invalid Transaction ID. This request cannot be approved.";
                     
                     const userDoc = await transaction.get(userRef);
                     if (!userDoc.exists()) throw "User does not exist!";
@@ -1609,9 +1742,15 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
                 console.error("Error approving deposit: ", error);
                 alert("Failed to approve deposit: " + error);
             }
+            } finally {
+                depositActionLocks.delete(depositId);
+            }
         }
 
         async function rejectDeposit(depositId) {
+            if (depositActionLocks.has(depositId)) return;
+            depositActionLocks.add(depositId);
+            try {
             if (!(await showPermissionPopup("Confirm Update", "Are you sure you want to reject this deposit request?", "Reject"))) return;
             try {
                 await updateDoc(doc(db, "depositRequests", depositId), { status: 'rejected', processedAt: serverTimestamp() });
@@ -1620,6 +1759,9 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
                 loadDashboardData();
             } catch (error) {
                 console.error("Error rejecting deposit: ", error);
+            }
+            } finally {
+                depositActionLocks.delete(depositId);
             }
         }
 
@@ -1645,7 +1787,7 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
                     const statusBadge = user.isAdmin ? '<span class="text-blue-600 font-bold text-xs">Admin</span>' : '<span class="text-green-600 font-bold text-xs">User</span>';
                     html += `
                         <tr>
-                            <td class="font-bold text-xs">${user.name || 'Unknown'}</td>
+                            <td><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-xs">${(user.photo || user.photoURL || user.profilePhotoURL) ? `<img src="${esc(user.photo || user.photoURL || user.profilePhotoURL)}" alt="" style="width:100%;height:100%;object-fit:cover">` : esc(String(user.name || 'U').slice(0,2).toUpperCase())}</div><span class="font-bold text-xs">${esc(user.name || 'Unknown')}</span></div></td>
                             <td class="text-xs">${user.email}</td>
                             <td class="font-bold text-orange-600">৳${user.walletBalance || 0}</td>
                             <td>${statusBadge}</td>
@@ -1954,6 +2096,7 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
                     document.getElementById('setting-notice').value = data.noticeText || '';
                     document.getElementById('setting-help-link').value = data.helpLink ?? '';
                     document.getElementById('setting-payment-banner').value = data.paymentBanner || '';
+                    document.getElementById('setting-add-money-video').value = data.addMoneyVideoUrl || '';
                 }
             } catch (error) {
                 console.error("Error loading app settings: ", error);
@@ -1968,10 +2111,11 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
             const noticeText = document.getElementById('setting-notice').value;
             const helpLink = document.getElementById('setting-help-link').value.trim();
             const paymentBanner = document.getElementById('setting-payment-banner').value.trim();
+            const addMoneyVideoUrl = document.getElementById('setting-add-money-video').value.trim();
 
             try {
                 await setDoc(doc(db, "settings", "app"), {
-                    appName, appLogo, brandImage, helpline, noticeText, helpLink, paymentBanner, updatedAt: serverTimestamp()
+                    appName, appLogo, brandImage, helpline, noticeText, helpLink, paymentBanner, addMoneyVideoUrl, updatedAt: serverTimestamp()
                 });
                 alert("App settings saved!");
             } catch (error) {
@@ -2208,6 +2352,7 @@ input::selection, textarea::selection { background: rgba(255,107,0,.25); }
         window.approveDeposit = approveDeposit;
         window.rejectDeposit = rejectDeposit;
         window.editUserWallet = editUserWallet;
+        window.editLeaderboardUser = editLeaderboardUser;
         window.filterCatProducts = filterCatProducts;
         window.openPackagePage = openPackagePage;
         window.closePackagePage = closePackagePage;
